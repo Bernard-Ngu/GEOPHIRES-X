@@ -106,11 +106,12 @@ class ProductionWellboreModelTestCase(BaseTestCase):
         self.assertGreaterEqual(reservoir.wellbores.redrill.value, produced.wellbores.redrill.value)
         np.testing.assert_allclose(reservoir.reserv.Tresoutput.value[:12], produced.reserv.Tresoutput.value[:12])
 
-    def test_reservoir_model_9_is_rejected(self):
-        """The Fimbul feedzone reservoir model is gone; its number is refused by the range check, not later."""
+    def test_reservoir_model_past_the_last_is_rejected(self):
+        """A number past the last reservoir model (9, Fimbul Feedzone Profile) is refused by the range check."""
         with self.assertRaises(ValueError) as cm:
-            self._model({'Reservoir Model': 9})
+            self._model({'Reservoir Model': 10})
         self.assertIn('Reservoir Model', str(cm.exception))
+        self.assertIn('outside of valid range', str(cm.exception))
 
     def test_value_outside_the_allowable_range_is_rejected(self):
         with self.assertRaises(ValueError):

@@ -182,6 +182,12 @@ class GeophiresXResult:
             ],
             'RESERVOIR PARAMETERS': [
                 _EqualSignDelimitedField('Reservoir Model'),
+                _StringValueField('Fimbul case hash'),
+                _StringValueField('Fimbul fluid system'),
+                'Fimbul minimum saturation margin',
+                'Fimbul maximum vapor saturation',
+                'Fimbul achieved flow rate per well',
+                'Fimbul minus Gringarten mean produced temperature',
                 _EqualSignDelimitedField('Fracture model'),
                 # TODO moved to power generation profile, parse from there
                 #  'Annual Thermal Drawdown (%/year)',

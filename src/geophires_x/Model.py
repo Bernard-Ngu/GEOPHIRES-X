@@ -32,6 +32,7 @@ from geophires_x.LHSReservoir import LHSReservoir
 from geophires_x.SFReservoir import SFReservoir
 from geophires_x.UPPReservoir import UPPReservoir
 from geophires_x.TOUGH2Reservoir import TOUGH2Reservoir
+from geophires_x.FimbulReservoir import FimbulReservoir
 from geophires_x.SUTRAReservoir import SUTRAReservoir
 from geophires_x.CoupledWellBores import CoupledWellBores
 from geophires_x.SUTRAWellBores import SUTRAWellBores
@@ -138,6 +139,8 @@ class Model(object):
                 self.reserv: SBTReservoir = SBTReservoir(self)
                 self.wellbores: SBTWellbores = SBTWellbores(self)
                 self.economics: SBTEconomics = SBTEconomics(self)
+            elif self.InputParameters['Reservoir Model'].sValue in ['9', 'Fimbul Feedzone Profile']:
+                self.reserv: FimbulReservoir = FimbulReservoir(self)
 
         # Now handle the special cases for all AGS cases (CLGS, SBT, or CLGS)
         if 'Is AGS' in self.InputParameters:

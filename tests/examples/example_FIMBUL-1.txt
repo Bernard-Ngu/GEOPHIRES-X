@@ -1,0 +1,120 @@
+# Example: FIMBUL 1: Fimbul Feedzone Profile Reservoir Model (Reservoir Model 9) with the coupled inflow-wellbore production wellbore model
+#
+# example_SHR-6 (the 200 deg.C / 36.7 deg.C/km CATF cell with a pumped production well) with the Gringarten reservoir
+# model replaced by Reservoir Model 9, which reads the far-field (feedzone) temperature history of the production well
+# from a FeedzoneHistory JSON document written by fimbul-python after a Fimbul.jl (JutulDarcy) reservoir simulation.
+# GEOPHIRES never runs Julia: the JSON is the whole hand-off, so this example runs wherever GEOPHIRES runs. The
+# profile is checked against the deck (depth, bottom-hole temperature, flow rate per well, fracture height),
+# resampled onto the GEOPHIRES time vector and used as the reservoir output temperature; the fracture geometry,
+# reservoir volume, hydrostatic pressure and productivity-index drawdown still come from the deck, exactly as for
+# the Gringarten model, so the production pump, plant path and economics are unchanged in kind.
+#
+# The committed profile tests/examples/fimbul_profiles/example_FIMBUL-1.json is a synthetic, Gringarten-shaped
+# single-phase liquid history generated from example_SHR-6's reservoir output temperature (see
+# tests/geophires_x_tests/test_fimbul_reservoir.py), so this example reproduces example_SHR-6 closely; a profile from
+# an actual Fimbul run has the same format. Profiles from Fimbul's pressure-enthalpy water model
+# (invariants.fluid_system H2O) are read the same way, with the maximum vapor saturation reported in place of the
+# saturation margin.
+#
+# Requires the superhot-wellbore package:
+#   pip install git+https://github.com/softwareengineerprogrammer/superhot-wellbore.git@geophires-client
+
+# ******************** RESERVOIR ********************
+Reservoir Model, 9, -- Fimbul feedzone profile: the far-field temperature history is read from the FeedzoneHistory JSON below
+Fimbul Feedzone Profile File, tests/examples/fimbul_profiles/example_FIMBUL-1.json, -- Relative to FIMBUL_PROFILES_DIR if set, else to the working directory (or the GEOPHIRES source tree)
+Fimbul Drawdown Reference Window, 1, -- [yr] The thermal drawdown redrilling trigger measures against the maximum temperature over the first year
+Fimbul Maximum Redrill Events, 12
+
+Reservoir Depth, 5.12, -- [km] 200 deg.C at 36.7 deg.C/km with a 12 deg.C surface
+Reservoir Density, 2800
+Reservoir Heat Capacity, 790
+Reservoir Thermal Conductivity, 3.05
+Reservoir Porosity, 0.0118
+
+Reservoir Volume Option, 1, -- FRAC_NUM_SEP: calculate heat-in-place based on realistic fracture geometry. Number of Fractures calculated in code.
+Fracture Shape, 3, -- Square (Congruent with Gringarten)
+Fracture Height, 174.64
+Fracture Separation, 9.8255
+Number of Fractures per Stimulated Well, 150
+
+Number of Segments, 1
+Gradient 1, 36.7
+Surface Temperature, 12
+Maximum Temperature, 600
+
+# ******************** WELL BORES ********************
+Production Wellbore Model, 2, -- Production wells simulated with the superhot-wellbore package (Darcy inflow, wellbore march, production pump stage) in place of Ramey's model and the productivity-index pump model.
+
+Number of Production Wells, 12
+Number of Injection Wells per Production Well, 0.666, -- Modeled on the reference case 5-well bench pattern (3 producers : 2 injectors) described in Singh et al., 2025.
+
+Well Geometry Configuration, 4, -- L (required for lateral costing)
+Number of Multilateral Sections per Vertical Section, 1
+Nonvertical Length per Multilateral Section, 1474
+
+Production Well Diameter, 8.535, -- Inner diameter of 9 5/8 inch casing
+Injection Well Diameter, 8.535
+
+Productivity Index, 0.7482, -- [kg/s/bar] CATF FOAK value (derated NREL 2024b ATB conservative scenario)
+Injectivity Index, 0.9045, -- [kg/s/bar] CATF FOAK value
+
+Production Flow Rate per Well, 60
+
+Injection Temperature, 60
+Injection Wellbore Temperature Gain, 3
+
+Maximum Drawdown, 0.0025, -- Models potential thermal breakthrough requiring redrilling in conjunction with reservoir volume & fracture geometry
+
+Coupled Wellbore Pump Policy, auto, -- Pump the well when it does not self-flow (does not reach the surface, or reaches it below Coupled Wellbore Minimum Self-Flow Wellhead Pressure)
+Coupled Wellbore Pump Envelope, flag, -- A pump outside the depth / intake temperature envelope is modelled and reported in the pump flags
+Coupled Wellbore Pump Maximum Depth, 1500
+Coupled Wellbore Pump Maximum Intake Temperature, 250
+Coupled Wellbore Minimum Self-Flow Wellhead Pressure, 1000, -- [kPa]
+Coupled Wellbore Maximum Solve Points, 4, -- Coupled inflow-wellbore solves per redrilling period; each takes seconds.
+
+# ******************** SURFACE PLANT ********************
+End-Use Option, 1, -- Electricity
+Power Plant Type, 10, -- Coupled Wellbore Power Cycle plant
+Coupled Wellbore Plant Policy, correlation-first, -- Liquid wellhead: GEOPHIRES ORC / double-flash correlations; two-phase wellhead: wet double flash; supercritical or superheated wellhead: the superhot-wellbore power cycle
+Coupled Wellbore ORC Maximum Wellhead Temperature, 245
+
+Utilization Factor, .9
+Water Loss Fraction, 0.2375, -- Average of 14.5-33% range (Clark et al., 2010)
+Ambient Temperature, 10
+Plant Lifetime, 25
+Circulation Pump Efficiency, 0.80
+Plant Outlet Pressure, 1 atm
+
+Construction CAPEX Schedule, 0.014,0.027,0.139,0.431,0.389, -- Matches Fervo_Project_Cape-5
+Construction Years, 5, -- Matches Fervo_Project_Cape-5
+
+# ******************** ECONOMICS ********************
+Economic Model, 5, -- SAM Single Owner PPA
+
+Starting Electricity Sale Price, 0.095, -- Upper end of ranges given in NREL Annual Technology Baseline (ATB) (NREL, 2024)
+Electricity Escalation Rate Per Year, 0.00057
+Electricity Escalation Start Year, 1
+Ending Electricity Sale Price, 0.15
+
+Fraction of Investment in Bonds, .7
+Inflated Bond Interest Rate, .07, -- 2024b ATB (NREL)
+Inflated Bond Interest Rate During Construction, 0.105
+Bond Financing Start Year, -2 yr, -- Equity-only for first 2 construction years (ATB)
+
+Inflation Rate, .027
+
+Combined Income Tax Rate, 0, -- Analysis is performed in a global context without any jurisdiction-specific tax assumptions.
+Property Tax Rate, 0
+
+Reservoir Stimulation Capital Cost per Fracture Surface Area, 0.87431693989, -- Derived from the GEOPHIRES Cape Station case study's baseline stimulation cost of $4.0M
+Reservoir Stimulation Capital Cost per Production Well, -1, -- Indicates both production and injection wells are stimulated.
+
+Field Gathering System Capital Cost Adjustment Factor, 0.339
+
+Well Drilling Cost Correlation, 5, -- Simple per-meter cost, as the CATF top-down drilling cost model
+All-in Vertical Drilling Costs, 1500
+All-in Nonvertical Drilling Costs, 1500
+
+# ******************** OTHER ********************
+Time steps per year, 12
+Print Output to Console, 0

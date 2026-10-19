@@ -11,11 +11,11 @@ In GEOPHIRES terms this is a production wellbore model, an alternative to Ramey'
 drop that also replaces the productivity-index inflow model and the productivity-index production pump model: it
 determines the flow rate (or the wellhead pressure), the reservoir drawdown, whether and where the well is pumped, the
 pump pressure rise and power, and the wellhead pressure, temperature and enthalpy of the produced fluid. It pairs with
-any thermal reservoir model. The reservoir model supplies the far-field temperature history over the plant lifetime
-(for example Gringarten's Multiple Parallel Fractures model from the usual fracture parameterization, or a
-user-provided temperature profile), GEOPHIRES supplies the far-field pressure history (Reservoir Hydrostatic Pressure with the
-Overpressure Percentage / Depletion Rate mechanism), and superhot-wellbore is solved along both. Injection wells, the
-surface plant and the economics remain GEOPHIRES' job as usual.
+any thermal reservoir model. The reservoir model supplies the far-field temperature history over the plant lifetime (for
+example Gringarten's Multiple Parallel Fractures model from the usual fracture parameterization, a user-provided
+temperature profile or a Fimbul feedzone profile), GEOPHIRES supplies the far-field pressure history (Reservoir
+Hydrostatic Pressure with the Overpressure Percentage / Depletion Rate mechanism), and superhot-wellbore is solved along
+both. Injection wells, the surface plant and the economics remain GEOPHIRES' job as usual.
 
 Parameter mapping
 -----------------
@@ -496,6 +496,13 @@ class CoupledWellBores(WellBores):
             self._coupled_wellbore_client = _import_coupled_wellbore_client()
 
         reserv = model.reserv
+
+        if getattr(reserv, 'provides_feedzone_history', False) and not self.prodwellflowrate.Provided:
+            raise ValueError(
+                f'{reserv.resoption.value.value} ({reserv.__class__.__name__}) supplies the feedzone temperature '
+                f'history simulated for one flow rate, so {COUPLED_WELLBORE_MODEL_LABEL} requires '
+                f'{self.prodwellflowrate.Name} (the flow rate cannot be solved for from {self.ppwellhead.Name}).'
+            )
 
         P_initial_MPa = self._initial_reservoir_pressure_kPa(model) / 1000.0
         T_initial_C = float(reserv.Trock.value)

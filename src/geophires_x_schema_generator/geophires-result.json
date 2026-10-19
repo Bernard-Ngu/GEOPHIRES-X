@@ -309,6 +309,36 @@
       "type": "object",
       "properties": {
         "Reservoir Model": {},
+        "Fimbul case hash": {
+          "type": "string",
+          "description": "Fimbul Case Hash. Case hash of the Fimbul run that produced the feedzone profile (provenance)",
+          "units": null
+        },
+        "Fimbul fluid system": {
+          "type": "string",
+          "description": "Fimbul Fluid System. Fluid system of the Fimbul run (invariants.fluid_system): H2O for Fimbul's pressure-enthalpy water model, in which two-phase water is modelled; empty for a single-phase liquid profile",
+          "units": null
+        },
+        "Fimbul minimum saturation margin": {
+          "type": "number",
+          "description": "Fimbul Minimum Saturation Margin. Smallest margin of the pressure above the saturation pressure over all reservoir and fracture cells and report steps of the Fimbul run; the single-phase reservoir model is valid only while it is positive. Single-phase liquid profiles only (NaN for H2O profiles)",
+          "units": "kPa"
+        },
+        "Fimbul maximum vapor saturation": {
+          "type": "number",
+          "description": "Fimbul Maximum Vapor Saturation. Largest vapor saturation (fraction of the pore volume filled with steam, 0 to 1) over all reservoir and fracture cells and report steps of the Fimbul run; 0 when the water stayed single-phase everywhere. H2O (pressure-enthalpy water) profiles only (NaN for single-phase liquid profiles)",
+          "units": null
+        },
+        "Fimbul achieved flow rate per well": {
+          "type": "number",
+          "description": "Fimbul Achieved Flow Rate per Well. Mean mass rate per production well achieved by the rate-controlled producer of the Fimbul run",
+          "units": "kg/sec"
+        },
+        "Fimbul minus Gringarten mean produced temperature": {
+          "type": "number",
+          "description": "Fimbul Minus Gringarten Mean Produced Temperature. Mean over the plant lifetime of the Fimbul feedzone temperature minus the Gringarten reservoir output temperature of the same deck (the shadow curve stored in the profile), before redrilling; NaN when the profile carries no Gringarten block",
+          "units": "degC"
+        },
         "Fracture model": {},
         "Bottom-hole temperature": {
           "type": "number",

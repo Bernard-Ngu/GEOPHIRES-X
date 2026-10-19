@@ -272,6 +272,26 @@ def print_outputs_rich(
     else:
         reservoir_parameters.append(
             OutputTableItem('Reservoir Model', str(model.reserv.resoption.value.value) + ' Model'))
+        if model.reserv.resoption.value is ReservoirModel.FIMBUL:
+            reservoir_parameters.append(
+                OutputTableItem('Fimbul case hash', model.reserv.fimbul_case_hash_output.value))
+            if model.reserv.fimbul_fluid_system:
+                # pressure-enthalpy water profile: two-phase water is modelled, report the vapor saturation
+                reservoir_parameters.append(
+                    OutputTableItem('Fimbul fluid system', model.reserv.fimbul_fluid_system_output.value))
+                reservoir_parameters.append(OutputTableItem('Fimbul maximum vapor saturation', '{0:10.4f}'.format(
+                    model.reserv.fimbul_max_vapor_saturation_output.value)))
+            else:
+                reservoir_parameters.append(OutputTableItem('Fimbul minimum saturation margin', '{0:10.2f}'.format(
+                    model.reserv.fimbul_min_saturation_margin.value),
+                    model.reserv.fimbul_min_saturation_margin.CurrentUnits.value))
+            reservoir_parameters.append(OutputTableItem('Fimbul achieved flow rate per well', '{0:10.2f}'.format(
+                model.reserv.fimbul_achieved_flow_rate.value),
+                model.reserv.fimbul_achieved_flow_rate.CurrentUnits.value))
+            reservoir_parameters.append(
+                OutputTableItem('Fimbul minus Gringarten mean produced temperature', '{0:10.2f}'.format(
+                    model.reserv.fimbul_gringarten_mean_delta.value),
+                    model.reserv.fimbul_gringarten_mean_delta.CurrentUnits.value))
         if model.reserv.resoption.value is ReservoirModel.SINGLE_FRACTURE:
             reservoir_parameters.append(
                 OutputTableItem('m/A Drawdown Parameter', '{0:.5f}'.format(model.reserv.drawdp.value),
@@ -292,7 +312,8 @@ def print_outputs_rich(
             reservoir_parameters.append(
                 OutputTableItem('They are only used for calculating remaining heat content.'))
 
-        if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP]:
+        if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES,
+                                            ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.FIMBUL]:
             reservoir_parameters.append(OutputTableItem('Fracture model', model.reserv.fracshape.value.value))
             if model.reserv.fracshape.value == FractureShape.CIRCULAR_AREA:
                 reservoir_parameters.append(OutputTableItem('Well separation: fracture diameter',
@@ -365,14 +386,14 @@ def print_outputs_rich(
                             model.reserv.rhorock.CurrentUnits.value))
         if model.wellbores.rameyoptionprod.value or model.reserv.resoption.value in [
             ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP,
-            ReservoirModel.SINGLE_FRACTURE, ReservoirModel.TOUGH2_SIMULATOR]:
+            ReservoirModel.SINGLE_FRACTURE, ReservoirModel.TOUGH2_SIMULATOR, ReservoirModel.FIMBUL]:
             reservoir_parameters.append(
                 OutputTableItem('Reservoir thermal conductivity', '{0:10.2f}'.format(model.reserv.krock.value),
                                 model.reserv.krock.CurrentUnits.value))
         reservoir_parameters.append(
             OutputTableItem('Reservoir heat capacity', '{0:10.2f}'.format(model.reserv.cprock.value),
                             model.reserv.cprock.CurrentUnits.value))
-        if model.reserv.resoption.value in [ReservoirModel.LINEAR_HEAT_SWEEP] or (
+        if model.reserv.resoption.value in [ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.FIMBUL] or (
             model.reserv.resoption.value is ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model):
             reservoir_parameters.append(
                 OutputTableItem('Reservoir porosity', '{0:10.2f}'.format(model.reserv.porrock.value * 100),

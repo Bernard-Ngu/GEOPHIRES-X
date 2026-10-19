@@ -384,6 +384,16 @@ class Outputs:
                     f.write('The AGS models contain an intrinsic reservoir model that doesn\'t expose values that can be used in extensive reporting.\n')
                 else:
                     f.write(f'      Reservoir Model = {model.reserv.resoption.value.display_name}\n')
+                    if model.reserv.resoption.value is ReservoirModel.FIMBUL:
+                        f.write(f'      Fimbul case hash: {model.reserv.fimbul_case_hash_output.value}'.rstrip() + '\n')
+                        if model.reserv.fimbul_fluid_system:
+                            # pressure-enthalpy water profile: two-phase water is modelled, report the vapor saturation
+                            f.write(f'      Fimbul fluid system: {model.reserv.fimbul_fluid_system_output.value}\n')
+                            f.write(f'      {Outputs._field_label("Fimbul maximum vapor saturation", 56)}{model.reserv.fimbul_max_vapor_saturation_output.value:10.4f}\n')
+                        else:
+                            f.write(f'      {Outputs._field_label("Fimbul minimum saturation margin", 56)}{model.reserv.fimbul_min_saturation_margin.value:10.2f} {model.reserv.fimbul_min_saturation_margin.CurrentUnits.value}\n')
+                        f.write(f'      {Outputs._field_label("Fimbul achieved flow rate per well", 56)}{model.reserv.fimbul_achieved_flow_rate.value:10.2f} {model.reserv.fimbul_achieved_flow_rate.CurrentUnits.value}\n')
+                        f.write(f'      {Outputs._field_label("Fimbul minus Gringarten mean produced temperature", 56)}{model.reserv.fimbul_gringarten_mean_delta.value:10.2f} {model.reserv.fimbul_gringarten_mean_delta.CurrentUnits.value}\n')
                     if model.reserv.resoption.value is ReservoirModel.SINGLE_FRACTURE:
                         f.write(f'      m/A Drawdown Parameter:                                 {model.reserv.drawdp.value:.5f} ' + model.reserv.drawdp.CurrentUnits.value + NL)
                     elif model.reserv.resoption.value is ReservoirModel.ANNUAL_PERCENTAGE:
@@ -395,7 +405,7 @@ class Outputs:
                         f.write('               They are only used for calculating remaining heat content.  \n')
                         # TODO parse this note in GeophiresXResult
 
-                    if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP]:
+                    if model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.FIMBUL]:
                         f.write(f'      Fracture model = {model.reserv.fracshape.value.value}\n')
                         if model.reserv.fracshape.value == FractureShape.CIRCULAR_AREA:
                             f.write(f'      Well separation: fracture diameter:               {model.reserv.fracheightcalc.value:10.2f} ' + model.reserv.fracheight.CurrentUnits.value + NL)
@@ -441,10 +451,10 @@ class Outputs:
                         f.write(f'      Injectivity Index:                                {model.wellbores.II.value:10.2f} ' + model.wellbores.II.CurrentUnits.value + NL)
 
                     f.write(f'      Reservoir density:                                {model.reserv.rhorock.value:10.2f} ' + model.reserv.rhorock.CurrentUnits.value + NL)
-                    if model.wellbores.rameyoptionprod.value or model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.SINGLE_FRACTURE, ReservoirModel.TOUGH2_SIMULATOR]:
+                    if model.wellbores.rameyoptionprod.value or model.reserv.resoption.value in [ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.SINGLE_FRACTURE, ReservoirModel.TOUGH2_SIMULATOR, ReservoirModel.FIMBUL]:
                         f.write(f'      Reservoir thermal conductivity:                   {model.reserv.krock.value:10.2f} {model.reserv.krock.CurrentUnits.value}{NL}')
                     f.write(f'      Reservoir heat capacity:                          {model.reserv.cprock.value:10.2f} ' + model.reserv.cprock.CurrentUnits.value + NL)
-                    if model.reserv.resoption.value in [ReservoirModel.LINEAR_HEAT_SWEEP] or (model.reserv.resoption.value is ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model):
+                    if model.reserv.resoption.value in [ReservoirModel.LINEAR_HEAT_SWEEP, ReservoirModel.FIMBUL] or (model.reserv.resoption.value is ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model):
                         f.write(f'      Reservoir porosity:                               {model.reserv.porrock.value*100:10.2f} ' + model.reserv.porrock.CurrentUnits.value + NL)
                     if model.reserv.resoption.value is ReservoirModel.TOUGH2_SIMULATOR and model.reserv.usebuiltintough2model:
                         f.write(f'      Reservoir permeability:                           {model.reserv.permrock.value:10.2E} ' + model.reserv.permrock.CurrentUnits.value + NL)

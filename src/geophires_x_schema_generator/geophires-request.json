@@ -41,13 +41,13 @@
   ],
   "properties": {
     "Reservoir Model": {
-      "description": "0: Simple cylindrical; 1: Multiple Parallel Fractures (Gringarten); 2: 1-D Linear Heat Sweep; 3: Single Fracture m/A Thermal Drawdown; 4: Annual Percentage Thermal Drawdown; 5: User-Provided Temperature Profile; 6: TOUGH2 Simulator; 7: SUTRA; 8: SBT",
+      "description": "0: Simple cylindrical; 1: Multiple Parallel Fractures (Gringarten); 2: 1-D Linear Heat Sweep; 3: Single Fracture m/A Thermal Drawdown; 4: Annual Percentage Thermal Drawdown; 5: User-Provided Temperature Profile; 6: TOUGH2 Simulator; 7: SUTRA; 8: SBT; 9: Fimbul Feedzone Profile",
       "type": "integer",
       "units": null,
       "category": "Reservoir",
       "default": 4,
       "minimum": 0,
-      "maximum": 8,
+      "maximum": 9,
       "enum_values": [
         {
           "name": "CYLINDRICAL",
@@ -93,6 +93,11 @@
           "name": "SBT",
           "value": "SBT",
           "int_value": 8
+        },
+        {
+          "name": "FIMBUL",
+          "value": "Fimbul Feedzone Profile",
+          "int_value": 9
         }
       ]
     },
@@ -674,6 +679,42 @@
       "default": 0.0,
       "minimum": 10,
       "maximum": 10000
+    },
+    "Fimbul Feedzone Profile File": {
+      "description": "FeedzoneHistory JSON document written by fimbul-python (schema_version 1) with the feedzone temperature history of one production well simulated with Fimbul.jl for this deck: a single-phase liquid profile, or a pressure-enthalpy water profile (invariants.fluid_system H2O). An absolute path, or a path relative to the directory in the FIMBUL_PROFILES_DIR environment variable if set, else relative to the working directory.",
+      "type": "string",
+      "units": null,
+      "category": "Reservoir",
+      "default": "",
+      "minimum": null,
+      "maximum": null
+    },
+    "Fimbul Drawdown Reference Window": {
+      "description": "The thermal drawdown redrilling trigger (Maximum Drawdown) measures against the maximum temperature (per Redrilling Trigger Temperature) over this window from the start of production, and cannot fire inside it, so that the warm-up hump or dip of a numerically simulated profile neither sets the reference nor triggers redrilling.",
+      "type": "number",
+      "units": "yr",
+      "category": "Reservoir",
+      "default": 1.0,
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    "Fimbul Maximum Redrill Events": {
+      "description": "Largest number of redrilling events admissible with a Fimbul profile; a thermal drawdown or well integrity trigger implying more is an error, since it would tile a short profile many times.",
+      "type": "integer",
+      "units": null,
+      "category": "Reservoir",
+      "default": 12,
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "Fimbul Initial Temperature Tolerance": {
+      "description": "A difference between the profile temperature at t = 0 and the bottom-hole temperature of the deck above this tolerance logs a warning; above four times it the run aborts.",
+      "type": "number",
+      "units": "degC",
+      "category": "Reservoir",
+      "default": 5.0,
+      "minimum": 0.0,
+      "maximum": 100.0
     },
     "Number of Production Wells": {
       "description": "Number of (identical) production wells",

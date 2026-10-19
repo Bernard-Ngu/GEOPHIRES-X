@@ -1781,13 +1781,21 @@ class WellBores:
 
     def calculate_redrilling(self, model: Model) -> None:
         """
-        Redrilling applies to the built-in analytical reservoir models and user-provided profiles.
+        Redrilling applies to the built-in analytical reservoir models, user-provided profiles and Fimbul feedzone
+        profiles.
+
+        A reservoir model may set three optional attributes on itself to steer the redrilling of an externally
+        simulated profile (see FimbulReservoir): drawdown_reference_steps (int, default 1: the thermal drawdown
+        trigger measures against the maximum of the trigger temperature (Redrilling Trigger Temperature) over the
+        first that many time steps and cannot fire within them), tiled_histories (names of array attributes of the
+        reservoir model to tile alongside the temperature history) and max_redrill_events (a redrill count above it
+        raises RuntimeError). With the defaults the calculation is unchanged.
         """
 
         if model.reserv.resoption.value not in [
             ReservoirModel.MULTIPLE_PARALLEL_FRACTURES, ReservoirModel.LINEAR_HEAT_SWEEP,
             ReservoirModel.SINGLE_FRACTURE, ReservoirModel.ANNUAL_PERCENTAGE,
-            ReservoirModel.USER_PROVIDED_PROFILE,
+            ReservoirModel.USER_PROVIDED_PROFILE, ReservoirModel.FIMBUL,
         ]:
             return
 
@@ -1799,7 +1807,10 @@ class WellBores:
             trigger_temperature = np.asarray(model.reserv.Tresoutput.value, dtype=float)
         else:
             trigger_temperature = np.asarray(self.ProducedTemperature.value, dtype=float)
-        below_max_drawdown = trigger_temperature < (1 - model.wellbores.maxdrawdown.value) * trigger_temperature[0]
+        k_ref = max(int(getattr(model.reserv, 'drawdown_reference_steps', 1)), 1)
+        drawdown_reference = np.max(trigger_temperature[:k_ref])
+        below_max_drawdown = trigger_temperature < (1 - model.wellbores.maxdrawdown.value) * drawdown_reference
+        below_max_drawdown[:k_ref] = False
         index_first_max_drawdown = int(np.argmax(below_max_drawdown))
 
         # Well integrity (chronological) trigger
@@ -1832,6 +1843,19 @@ class WellBores:
             self.redrill.value + 1,
         )
         model.reserv.Tresoutput.value = TResOutputRepeated[0:total_steps]
+
+        for history_name in getattr(model.reserv, 'tiled_histories', ()):
+            history = np.asarray(getattr(model.reserv, history_name), dtype=float)
+            setattr(model.reserv, history_name,
+                    np.tile(history[0:redrill_trigger_index], self.redrill.value + 1)[0:total_steps])
+
+        max_redrill_events = getattr(model.reserv, 'max_redrill_events', None)
+        if max_redrill_events is not None and self.redrill.value > max_redrill_events:
+            raise RuntimeError(
+                f'Redrilling triggered at time step {redrill_trigger_index} of {total_steps} implies '
+                f'{self.redrill.value} redrill events, more than the {max_redrill_events} allowed by '
+                f'{model.reserv.__class__.__name__}; check the reservoir temperature profile.'
+            )
 
         # Log which mechanism dominated
         if (integrity_failure_index > 0

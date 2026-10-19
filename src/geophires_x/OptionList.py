@@ -139,6 +139,7 @@ class ReservoirModel(GeophiresInputEnum):
     TOUGH2_SIMULATOR = 6, "TOUGH2 Simulator"
     SUTRA = 7, "SUTRA"
     SBT = 8, "SBT"
+    FIMBUL = 9, "Fimbul Feedzone Profile"
 
     @staticmethod
     def get_reservoir_model_from_input_string(input_string: str):
